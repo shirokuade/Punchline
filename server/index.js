@@ -69,19 +69,22 @@ app.post('/api/summarize', async (req, res) => {
       messages: [
         {
           role: 'user',
-          content: `You are a master of concise, impactful communication. Your task is to read this article and create a "punchline" summary - a punchy, meaningful 1-2 sentence summary that captures the essence and impact of the story, similar to how a punchline delivers the climax of a joke.
+          content: `You are a master of concise, informative communication. Your task is to create a "punchline" summary - a sharp 1-2 sentence summary that delivers the MOST IMPORTANT and USEFUL information from this article.
 
-Make it:
-- Concise (1-2 sentences max)
-- Impactful and memorable
-- Captures the key insight or revelation
-- Has a bit of wit or edge when appropriate
-- Gets straight to the point
+Your summary MUST:
+- Include specific facts, numbers, names, or concrete details (what actually happened)
+- Explain WHY this matters or what the key impact/implication is
+- Be informative and actionable first, clever second
+- Answer: "What's the core news?" and "Why should I care?"
+- Avoid vague generalizations - be SPECIFIC
+
+BAD example (too vague): "Company launches new product to change the market"
+GOOD example: "Apple's Vision Pro starts at $3,499 and ships February 2024, targeting enterprise users before consumers"
 
 Article:
 ${articleText}
 
-Provide ONLY the punchline summary, nothing else.`
+Provide ONLY the punchline summary with specific details, nothing else.`
         }
       ]
     });
