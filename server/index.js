@@ -65,26 +65,28 @@ app.post('/api/summarize', async (req, res) => {
     // Use Claude to generate a punchline-style summary
     const message = await anthropic.messages.create({
       model: 'claude-sonnet-4-5-20250929',
-      max_tokens: 200,
+      max_tokens: 300,
       messages: [
         {
           role: 'user',
-          content: `You are a master of concise, informative communication. Your task is to create a "punchline" summary - a sharp 1-2 sentence summary that delivers the MOST IMPORTANT and USEFUL information from this article.
+          content: `You are a master of concise, informative communication. Create a 2-sentence "punchline" summary:
 
-Your summary MUST:
-- Include specific facts, numbers, names, or concrete details (what actually happened)
-- Explain WHY this matters or what the key impact/implication is
-- Be informative and actionable first, clever second
-- Answer: "What's the core news?" and "Why should I care?"
-- Avoid vague generalizations - be SPECIFIC
+SENTENCE 1: A sharp, punchy summary that captures the core news with specific details (what happened and why it matters).
 
-BAD example (too vague): "Company launches new product to change the market"
-GOOD example: "Apple's Vision Pro starts at $3,499 and ships February 2024, targeting enterprise users before consumers"
+SENTENCE 2: List the 5 most important facts from the article, BUT ONLY include facts relevant to someone interested in BUSINESS and TECH. Filter out facts about other topics.
+
+User Profile: Interest in business and tech
+
+Format:
+[Punchy summary sentence]. [Key fact 1], [key fact 2], [key fact 3], [key fact 4], and [key fact 5].
+
+Example:
+"OpenAI launched Atlas browser with built-in ChatGPT at $20/month, directly challenging Chrome's dominance. The browser includes AI-powered tab management, automatic code review for developers, integration with Microsoft 365, a new revenue-sharing model for content creators, and releases March 2024 for Pro subscribers."
 
 Article:
 ${articleText}
 
-Provide ONLY the punchline summary with specific details, nothing else.`
+Provide ONLY the 2-sentence punchline with business/tech-relevant facts, nothing else.`
         }
       ]
     });
