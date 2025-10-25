@@ -9,6 +9,20 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// Check for required environment variables
+const missingVars = [];
+if (!process.env.ANTHROPIC_API_KEY) missingVars.push('ANTHROPIC_API_KEY');
+if (!process.env.NEWS_API_KEY) missingVars.push('NEWS_API_KEY');
+
+if (missingVars.length > 0) {
+  console.error('\n❌ ERROR: Missing required environment variables:');
+  missingVars.forEach(varName => console.error(`   - ${varName}`));
+  console.error('\n📝 To fix this:');
+  console.error('   1. Copy .env.example to .env');
+  console.error('   2. Add your API keys to the .env file');
+  console.error('   3. Restart the server\n');
+}
+
 // Initialize Anthropic client
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -19,12 +33,28 @@ app.use(express.json());
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', message: 'Punchline API is running' });
+  const keysConfigured = {
+    anthropic: !!process.env.ANTHROPIC_API_KEY,
+    newsApi: !!process.env.NEWS_API_KEY
+  };
+
+  res.json({
+    status: 'ok',
+    message: 'Punchline API is running',
+    keysConfigured
+  });
 });
 
 // Get latest news articles
 app.get('/api/news', async (req, res) => {
   try {
+    if (!process.env.NEWS_API_KEY) {
+      return res.status(500).json({
+        error: 'NEWS_API_KEY not configured',
+        message: 'Please create a .env file with your NewsAPI key. See .env.example for details.'
+      });
+    }
+
     const { category = 'general', country = 'us' } = req.query;
 
     const response = await axios.get('https://newsapi.org/v2/top-headlines', {
@@ -38,10 +68,26 @@ app.get('/api/news', async (req, res) => {
 
     res.json(response.data);
   } catch (error) {
-    console.error('Error fetching news:', error.message);
+    console.error('Error fetching news:', error.response?.data || error.message);
+
+    // Better error messages for common issues
+    if (error.response?.status === 401) {
+      return res.status(500).json({
+        error: 'Invalid News API key',
+        message: 'Your NEWS_API_KEY is invalid. Get a free key at https://newsapi.org/'
+      });
+    }
+
+    if (error.response?.status === 426) {
+      return res.status(500).json({
+        error: 'News API upgrade required',
+        message: 'Your NewsAPI key requires an upgrade for this request.'
+      });
+    }
+
     res.status(500).json({
       error: 'Failed to fetch news',
-      message: error.message
+      message: error.response?.data?.message || error.message
     });
   }
 });
@@ -49,6 +95,13 @@ app.get('/api/news', async (req, res) => {
 // Generate punchline summary for an article
 app.post('/api/summarize', async (req, res) => {
   try {
+    if (!process.env.ANTHROPIC_API_KEY) {
+      return res.status(500).json({
+        error: 'ANTHROPIC_API_KEY not configured',
+        message: 'Please create a .env file with your Anthropic API key. See .env.example for details.'
+      });
+    }
+
     const { title, description, content, url, userProfile } = req.body;
 
     if (!title && !description && !content) {
@@ -112,6 +165,13 @@ Provide ONLY the 2-sentence punchline with facts relevant to the user's interest
 // Search news by keyword
 app.get('/api/search', async (req, res) => {
   try {
+    if (!process.env.NEWS_API_KEY) {
+      return res.status(500).json({
+        error: 'NEWS_API_KEY not configured',
+        message: 'Please create a .env file with your NewsAPI key. See .env.example for details.'
+      });
+    }
+
     const { q, sortBy = 'publishedAt' } = req.query;
 
     if (!q) {
@@ -129,10 +189,19 @@ app.get('/api/search', async (req, res) => {
 
     res.json(response.data);
   } catch (error) {
-    console.error('Error searching news:', error.message);
+    console.error('Error searching news:', error.response?.data || error.message);
+
+    // Better error messages for common issues
+    if (error.response?.status === 401) {
+      return res.status(500).json({
+        error: 'Invalid News API key',
+        message: 'Your NEWS_API_KEY is invalid. Get a free key at https://newsapi.org/'
+      });
+    }
+
     res.status(500).json({
       error: 'Failed to search news',
-      message: error.message
+      message: error.response?.data?.message || error.message
     });
   }
 });
