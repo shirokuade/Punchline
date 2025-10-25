@@ -1,9 +1,0 @@
-{
-  "name": "punchline-functions",
-  "version": "1.0.0",
-  "type": "module",
-  "dependencies": {
-    "@anthropic-ai/sdk": "^0.30.0",
-    "axios": "^1.6.7"
-  }
-}
