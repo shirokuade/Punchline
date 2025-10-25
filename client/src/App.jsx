@@ -10,7 +10,16 @@ function App() {
   const [error, setError] = useState(null);
   const [category, setCategory] = useState('general');
   const [searchQuery, setSearchQuery] = useState('');
-  const [userProfile, setUserProfile] = useState('business and tech');
+  const [userProfile, setUserProfile] = useState(() => {
+    // Load saved profile from localStorage or use default
+    const saved = localStorage.getItem('punchline_user_profile');
+    return saved || 'business and tech';
+  });
+
+  // Save user profile to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('punchline_user_profile', userProfile);
+  }, [userProfile]);
 
   useEffect(() => {
     fetchNews();
@@ -75,7 +84,7 @@ function App() {
             onChange={(e) => setUserProfile(e.target.value)}
           />
           <small className="profile-hint">
-            📌 Punchlines will highlight facts relevant to your interests
+            💾 Auto-saved • Punchlines will highlight facts relevant to your interests
           </small>
         </div>
       </header>
