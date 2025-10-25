@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import axios from 'axios';
 
-function ArticleCard({ article }) {
+function ArticleCard({ article, userProfile }) {
   const [punchline, setPunchline] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -15,7 +15,8 @@ function ArticleCard({ article }) {
         title: article.title,
         description: article.description,
         content: article.content,
-        url: article.url
+        url: article.url,
+        userProfile: userProfile || 'business and tech'
       });
 
       setPunchline(response.data.punchline);

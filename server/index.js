@@ -49,7 +49,7 @@ app.get('/api/news', async (req, res) => {
 // Generate punchline summary for an article
 app.post('/api/summarize', async (req, res) => {
   try {
-    const { title, description, content, url } = req.body;
+    const { title, description, content, url, userProfile } = req.body;
 
     if (!title && !description && !content) {
       return res.status(400).json({
@@ -62,6 +62,9 @@ app.post('/api/summarize', async (req, res) => {
       .filter(Boolean)
       .join('\n\n');
 
+    // Use user's interests or default to business and tech
+    const interests = userProfile || 'business and tech';
+
     // Use Claude to generate a punchline-style summary
     const message = await anthropic.messages.create({
       model: 'claude-sonnet-4-5-20250929',
@@ -73,9 +76,9 @@ app.post('/api/summarize', async (req, res) => {
 
 SENTENCE 1: A sharp, punchy summary that captures the core news with specific details (what happened and why it matters).
 
-SENTENCE 2: List the 5 most important facts from the article, BUT ONLY include facts relevant to someone interested in BUSINESS and TECH. Filter out facts about other topics.
+SENTENCE 2: List the 5 most important facts from the article, BUT ONLY include facts relevant to someone interested in ${interests.toUpperCase()}. Filter out facts about other topics.
 
-User Profile: Interest in business and tech
+User Profile: Interest in ${interests}
 
 Format:
 [Punchy summary sentence]. [Key fact 1], [key fact 2], [key fact 3], [key fact 4], and [key fact 5].
@@ -86,7 +89,7 @@ Example:
 Article:
 ${articleText}
 
-Provide ONLY the 2-sentence punchline with business/tech-relevant facts, nothing else.`
+Provide ONLY the 2-sentence punchline with facts relevant to the user's interests, nothing else.`
         }
       ]
     });

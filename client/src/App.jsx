@@ -10,6 +10,7 @@ function App() {
   const [error, setError] = useState(null);
   const [category, setCategory] = useState('general');
   const [searchQuery, setSearchQuery] = useState('');
+  const [userProfile, setUserProfile] = useState('business and tech');
 
   useEffect(() => {
     fetchNews();
@@ -63,6 +64,20 @@ function App() {
       <header>
         <h1>🎤 Punchline</h1>
         <p>AI-powered article summaries that hit like a punchline</p>
+        <div className="profile-section">
+          <label htmlFor="userProfile">My interests:</label>
+          <input
+            id="userProfile"
+            type="text"
+            className="profile-input"
+            placeholder="e.g., business and tech, climate change, AI research, healthcare innovation"
+            value={userProfile}
+            onChange={(e) => setUserProfile(e.target.value)}
+          />
+          <small className="profile-hint">
+            📌 Punchlines will highlight facts relevant to your interests
+          </small>
+        </div>
       </header>
 
       <div className="controls">
@@ -104,7 +119,7 @@ function App() {
       ) : (
         <div className="articles-grid">
           {articles.map((article, index) => (
-            <ArticleCard key={index} article={article} />
+            <ArticleCard key={index} article={article} userProfile={userProfile} />
           ))}
         </div>
       )}
