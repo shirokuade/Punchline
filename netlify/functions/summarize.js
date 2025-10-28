@@ -1,14 +1,28 @@
 import Anthropic from '@anthropic-ai/sdk';
+import {
+  findArticleByUrl,
+  upsertArticle,
+  findCachedSummary,
+  cacheSummary,
+  storeEmbedding,
+  findSimilarArticles,
+  logAnalytics,
+  incrementProfileUsage
+} from './lib/database.js';
+import { generateArticleEmbedding } from './lib/embeddings.js';
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
 export async function handler(event) {
+  const startTime = Date.now();
+
   console.log('=== SUMMARIZE FUNCTION CALLED ===');
   console.log('Environment check:', {
     hasAnthropicKey: !!process.env.ANTHROPIC_API_KEY,
-    anthropicKeyLength: process.env.ANTHROPIC_API_KEY?.length || 0,
+    hasOpenAIKey: !!process.env.OPENAI_API_KEY,
+    hasDatabaseUrl: !!process.env.DATABASE_URL,
     nodeVersion: process.version
   });
 
@@ -34,8 +48,9 @@ export async function handler(event) {
   }
 
   try {
+    // Check environment variables
     if (!process.env.ANTHROPIC_API_KEY) {
-      console.error('❌ ANTHROPIC_API_KEY not found in environment');
+      console.error('❌ ANTHROPIC_API_KEY not found');
       return {
         statusCode: 500,
         headers: {
@@ -49,12 +64,17 @@ export async function handler(event) {
       };
     }
 
+    if (!process.env.DATABASE_URL) {
+      console.warn('⚠️ DATABASE_URL not found - caching disabled');
+    }
+
     const { title, description, content, url, userProfile } = JSON.parse(event.body || '{}');
 
     console.log('Request data:', {
       hasTitle: !!title,
       hasDescription: !!description,
       hasContent: !!content,
+      hasUrl: !!url,
       userProfile
     });
 
@@ -72,19 +92,97 @@ export async function handler(event) {
       };
     }
 
-    // Combine available text for better context
+    const interests = userProfile || 'business and tech';
+    let cacheHit = false;
+    let article = null;
+
+    // Try database caching if available
+    if (process.env.DATABASE_URL && url) {
+      try {
+        console.log('🔍 Checking database cache...');
+
+        // Check if article exists
+        article = await findArticleByUrl(url);
+
+        if (article) {
+          console.log('✅ Article found in database:', article.id);
+
+          // Check for cached summary
+          const cached = await findCachedSummary(article.id, interests);
+
+          if (cached) {
+            console.log('🎯 Cache HIT! Returning cached summary');
+            cacheHit = true;
+
+            // Log analytics
+            await logAnalytics({
+              endpoint: 'summarize',
+              article_url: url,
+              user_profile: interests,
+              cache_hit: true,
+              response_time_ms: Date.now() - startTime
+            });
+
+            await incrementProfileUsage(interests);
+
+            return {
+              statusCode: 200,
+              headers: {
+                'Access-Control-Allow-Origin': '*',
+                'Content-Type': 'application/json',
+                'X-Cache': 'HIT'
+              },
+              body: JSON.stringify({
+                punchline: cached.summary,
+                source: url,
+                cached: true,
+                cachedAt: cached.created_at
+              })
+            };
+          }
+
+          console.log('❌ Cache MISS for this user profile');
+        } else {
+          console.log('📝 New article - storing in database');
+
+          // Store new article
+          article = await upsertArticle({
+            url,
+            title,
+            description,
+            content,
+            source: null,
+            category: null,
+            image_url: null,
+            published_at: null
+          });
+
+          console.log('✅ Article stored:', article.id);
+
+          // Generate and store embedding asynchronously (don't block response)
+          if (process.env.OPENAI_API_KEY) {
+            generateArticleEmbedding({ title, description, content })
+              .then(embedding => storeEmbedding(article.id, embedding))
+              .then(() => console.log('✅ Embedding stored'))
+              .catch(err => console.error('⚠️ Failed to store embedding:', err));
+          }
+        }
+      } catch (dbError) {
+        console.error('⚠️ Database error (continuing without cache):', dbError);
+        // Continue without caching if database fails
+      }
+    }
+
+    // Cache MISS or no database - generate summary with LLM
+    console.log('🤖 Generating new summary with Claude...');
+
     const articleText = [title, description, content]
       .filter(Boolean)
       .join('\n\n');
 
-    // Use user's interests or default to business and tech
-    const interests = userProfile || 'business and tech';
-
-    console.log('Calling Anthropic API...');
     console.log('Article length:', articleText.length);
     console.log('User interests:', interests);
 
-    // Use Claude to generate a punchline-style summary
     const message = await anthropic.messages.create({
       model: 'claude-sonnet-4-5-20250929',
       max_tokens: 300,
@@ -118,15 +216,50 @@ Provide ONLY the 2-sentence punchline with facts relevant to the user's interest
     console.log('✅ Successfully generated punchline');
     console.log('Punchline length:', punchline.length);
 
+    // Cache the summary if database is available
+    if (process.env.DATABASE_URL && article) {
+      try {
+        const tokensUsed = message.usage.input_tokens + message.usage.output_tokens;
+        const costUsd = (tokensUsed / 1000000) * 3; // Rough estimate: $3 per 1M tokens
+
+        await cacheSummary({
+          article_id: article.id,
+          user_profile: interests,
+          summary: punchline,
+          model_used: 'claude-sonnet-4-5-20250929',
+          tokens_used: tokensUsed,
+          cost_usd: costUsd
+        });
+
+        console.log('✅ Summary cached for future requests');
+
+        // Log analytics
+        await logAnalytics({
+          endpoint: 'summarize',
+          article_url: url,
+          user_profile: interests,
+          cache_hit: false,
+          response_time_ms: Date.now() - startTime
+        });
+
+        await incrementProfileUsage(interests);
+      } catch (cacheError) {
+        console.error('⚠️ Failed to cache summary:', cacheError);
+        // Don't fail the request if caching fails
+      }
+    }
+
     return {
       statusCode: 200,
       headers: {
         'Access-Control-Allow-Origin': '*',
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'X-Cache': 'MISS'
       },
       body: JSON.stringify({
         punchline,
-        source: url
+        source: url,
+        cached: false
       })
     };
   } catch (error) {
