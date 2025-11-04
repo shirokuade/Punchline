@@ -97,7 +97,7 @@ function ArticleCard({ article, userProfile }) {
         </div>
 
         {/* BACK SIDE */}
-        <div className="article-card article-card-back" onClick={handleFlipBack}>
+        <div className="article-card article-card-back">
           <div className="punchline-container">
             <div className="punchline-header">
               <span className="punchline-label">🎤 PUNCHLINE</span>
@@ -128,13 +128,10 @@ function ArticleCard({ article, userProfile }) {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="btn btn-secondary"
-                onClick={(e) => e.stopPropagation()}
               >
                 Read Full
               </a>
             </div>
-
-            <p className="flip-hint">Click anywhere to flip back</p>
           </div>
         </div>
       </div>

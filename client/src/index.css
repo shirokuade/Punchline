@@ -210,7 +210,6 @@ header p {
 
 .article-card-back {
   transform: rotateY(180deg);
-  cursor: pointer;
 }
 
 .article-card:hover {
@@ -329,16 +328,6 @@ header p {
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-}
-
-.flip-hint {
-  text-align: center;
-  font-size: 0.75rem;
-  color: #666;
-  margin-top: 0.5rem;
-  font-style: italic;
-  opacity: 0.8;
-  flex-shrink: 0;
 }
 
 .error-message {
