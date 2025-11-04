@@ -6,6 +6,8 @@
     "axios": "^1.6.7",
     "@anthropic-ai/sdk": "^0.30.0",
     "pg": "^8.11.3",
-    "openai": "^4.28.0"
+    "openai": "^4.28.0",
+    "cheerio": "^1.0.0-rc.12",
+    "node-html-parser": "^6.1.12"
   }
 }

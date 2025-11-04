@@ -45,15 +45,21 @@ export async function handler(event) {
       };
     }
 
-    const { category = 'general', country = 'us' } = event.queryStringParameters || {};
+    const {
+      category = 'general',
+      country = 'us',
+      page = '1',
+      pageSize = '20'
+    } = event.queryStringParameters || {};
 
-    console.log('Fetching news:', { category, country });
+    console.log('Fetching news:', { category, country, page, pageSize });
 
     const response = await axios.get('https://newsapi.org/v2/top-headlines', {
       params: {
         country,
         category,
-        pageSize: 20,
+        page: parseInt(page),
+        pageSize: parseInt(pageSize),
         apiKey: process.env.NEWS_API_KEY,
       },
     });
