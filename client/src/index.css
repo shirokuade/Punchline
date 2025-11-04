@@ -284,13 +284,11 @@ header p {
 
 .punchline-content {
   flex: 1;
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
   margin: 1rem 0;
   overflow-y: auto;
   overflow-x: hidden;
   min-height: 0;
+  -webkit-overflow-scrolling: touch;
 }
 
 .punchline-text {
@@ -301,7 +299,7 @@ header p {
   font-style: italic;
   text-align: center;
   padding: 0.5rem;
-  max-width: 100%;
+  width: 100%;
 }
 
 .article-back-info {
