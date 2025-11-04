@@ -289,19 +289,22 @@ header p {
   align-items: center;
   justify-content: center;
   margin: 1rem 0;
-  overflow-y: auto;
+  overflow: hidden;
   min-height: 0;
 }
 
 .punchline-text {
-  font-size: 1.1rem;
+  font-size: 1rem;
   font-weight: 600;
   color: #2d3748;
-  line-height: 1.6;
+  line-height: 1.5;
   font-style: italic;
   text-align: center;
-  max-height: 100%;
-  overflow-y: auto;
+  display: -webkit-box;
+  -webkit-line-clamp: 7;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
   padding: 0.5rem;
 }
 
@@ -678,7 +681,8 @@ header p {
   }
 
   .punchline-text {
-    font-size: 1rem;
+    font-size: 0.95rem;
+    -webkit-line-clamp: 6;
   }
 
   .article-actions {
