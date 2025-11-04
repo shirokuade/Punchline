@@ -174,7 +174,7 @@ header p {
 /* Flip Card Container */
 .article-card-container {
   perspective: 1000px;
-  height: 500px;
+  height: 550px;
   position: relative;
 }
 
@@ -210,6 +210,7 @@ header p {
 
 .article-card-back {
   transform: rotateY(180deg);
+  cursor: pointer;
 }
 
 .article-card:hover {
@@ -218,17 +219,19 @@ header p {
 
 .article-image {
   width: 100%;
-  height: 200px;
+  height: 180px;
   object-fit: cover;
   background: #f0f0f0;
+  flex-shrink: 0;
 }
 
 .article-content {
-  padding: 1.5rem;
+  padding: 1.25rem;
   flex: 1;
   display: flex;
   flex-direction: column;
   overflow-y: auto;
+  min-height: 0;
 }
 
 .article-source {
@@ -252,6 +255,8 @@ header p {
   line-height: 1.6;
   margin-bottom: 1rem;
   flex: 1;
+  overflow-y: auto;
+  min-height: 0;
 }
 
 .article-actions {
@@ -262,19 +267,20 @@ header p {
 
 /* Card Back (Punchline Side) */
 .punchline-container {
-  padding: 2rem;
+  padding: 1.5rem;
   height: 100%;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
   background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
+  overflow-y: auto;
 }
 
 .punchline-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
+  flex-shrink: 0;
 }
 
 .punchline-content {
@@ -283,36 +289,56 @@ header p {
   align-items: center;
   justify-content: center;
   margin: 1rem 0;
+  overflow-y: auto;
+  min-height: 0;
 }
 
 .punchline-text {
-  font-size: 1.25rem;
+  font-size: 1.1rem;
   font-weight: 600;
   color: #2d3748;
-  line-height: 1.7;
+  line-height: 1.6;
   font-style: italic;
   text-align: center;
+  max-height: 100%;
+  overflow-y: auto;
+  padding: 0.5rem;
 }
 
 .article-back-info {
-  margin-bottom: 1rem;
-  padding-top: 1rem;
+  margin-bottom: 0.75rem;
+  padding-top: 0.75rem;
   border-top: 2px solid rgba(255, 255, 255, 0.5);
+  flex-shrink: 0;
 }
 
 .article-source-small {
   color: #764ba2;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 600;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.25rem;
   text-transform: uppercase;
 }
 
 .article-title-small {
-  font-size: 1rem;
+  font-size: 0.9rem;
   font-weight: 600;
   color: #2d3748;
   line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.flip-hint {
+  text-align: center;
+  font-size: 0.75rem;
+  color: #666;
+  margin-top: 0.5rem;
+  font-style: italic;
+  opacity: 0.8;
+  flex-shrink: 0;
 }
 
 .error-message {
@@ -648,18 +674,27 @@ header p {
   }
 
   .article-card-container {
-    height: 550px;
+    height: 600px;
   }
 
   .punchline-text {
-    font-size: 1.1rem;
+    font-size: 1rem;
   }
 
   .article-actions {
     flex-direction: column;
+    gap: 0.75rem;
   }
 
   .btn {
     width: 100%;
+  }
+
+  .article-image {
+    height: 160px;
+  }
+
+  .punchline-container {
+    padding: 1.25rem;
   }
 }
